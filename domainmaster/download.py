@@ -3,10 +3,12 @@ import sys
 import cgi
 import os
 import datetime
+import asyncio
+from typing import List
 
 from domainmaster.log_manager import logger
 from domainmaster.authentication_manager import authenticate
-from domainmaster.request_manager import do_get
+from domainmaster.request_manager import do_get, get_brand_gtlds
 
 access_token = ""
 
@@ -16,7 +18,7 @@ def set_access_token(token: str):
     access_token = token
 
 
-def get_zone_links(czds_base_url):
+def get_zone_links(czds_base_url) -> List:
     global access_token
 
     links_url = f"{czds_base_url}/czds/downloads/links"
@@ -31,15 +33,19 @@ def get_zone_links(czds_base_url):
     elif status_code == 401:
         logger.info("The access_token has been expired. Re-authenticate user {0}".format(username))
         access_token = authenticate(username, password, authen_base_url)
-        get_zone_links(czds_base_url)
+        return get_zone_links(czds_base_url)
     else:
         raise Exception("Failed to get zone links from {0} with error code {1}\n".format(links_url, status_code))
 
 
-def download_one_zone(url, output_directory):
+def download_one_zone(url: str, output_directory: str) -> str:
     logger.debug("{0}: Downloading zone file from {1}".format(str(datetime.datetime.now()), url))
 
     global access_token
+
+    # loop = asyncio.get_event_loop()
+    # loop.run_until_complete(do_get())
+
     download_zone_response = do_get(url, access_token)
 
     status_code = download_zone_response.status_code
@@ -61,28 +67,34 @@ def download_one_zone(url, output_directory):
                 f.write(chunk)
 
         logger.debug("{0}: Completed downloading zone to file {1}".format(str(datetime.datetime.now()), path))
+        return filename[:-7]
 
     elif status_code == 401:
-        print("The access_token has been expired. Re-authenticate user {0}".format(username))
+        logger.info("The access_token has been expired. Re-authenticate user {0}".format(username))
         access_token = authenticate(username, password, authen_base_url)
-        download_one_zone(url, output_directory)
+        return download_one_zone(url, output_directory)
     elif status_code == 404:
-        print("No zone file found for {0}".format(url))
+        logger.error("No zone file found for {0}".format(url))
+        return None
     else:
-        sys.stderr.write("Failed to download zone from {0} with code {1}\n".format(url, status_code))
+        logger.error("Failed to download zone from {0} with code {1}\n".format(url, status_code))
+        return None
 
 
 # Function definition for downloading all the zone files
-def download_zone_files(urls, working_directory, zones_to_download):
+def download_zone_files(working_directory, zones_to_download) -> List:
     base_uri = "https://czds-api.icann.org/czds/downloads"
     # The zone files will be saved in a sub-directory
     output_directory = f"{working_directory}/zonefiles"
+    downloaded_zone = []
+    brand_tlds = get_brand_gtlds()
 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
 
     # Download the zone files one by one
     for zone in zones_to_download:
-        link = f"{base_uri}/{zone}.zone"
-        if link in urls:
-            download_one_zone(link, output_directory)
+        if zone not in brand_tlds:
+            link = f"{base_uri}/{zone}.zone"
+            downloaded_zone.append(download_one_zone(link, output_directory))
+    return downloaded_zone
