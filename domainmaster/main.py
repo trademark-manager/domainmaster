@@ -9,7 +9,7 @@ import pandas
 
 from domainmaster.log_manager import logger
 from domainmaster.authentication_manager import authenticate
-from domainmaster.request_manager import get, async_get
+from domainmaster.request_manager import get, async_get, download_async
 
 
 class DomainMaster:
@@ -76,10 +76,18 @@ class DomainMaster:
 
     async def download_zones_async(self, urls: List, output_directory: str) -> str:
         loop = asyncio.get_event_loop()
-        functions = [async_get(url, self.access_token, output_directory) for url in urls]
 
-        results = await asyncio.gather(*functions)
-        self.downloaded_zones = results
+        def divide_chunks(l, n):
+            for i in range(0, len(l), n):
+                yield l[i : i + n]
+
+        urlchuncks = divide_chunks(urls, 5)
+        results = []
+        for chunck in urlchuncks:
+            functions = [download_async(url, self.access_token, output_directory) for url in chunck]
+            results.append(await asyncio.gather(*functions))
+
+        self.downloaded_zones = [item for sublist in results for item in sublist]
         return results
 
     def update_tlds(self, root_zone: str):

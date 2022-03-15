@@ -20,7 +20,17 @@ def get(url: str, access_token: str = None) -> requests.Response():
     return requests.get(url, stream=True)
 
 
-async def async_get(url: str, access_token: str, output_directory: str) -> str:
+async def async_get(url: str, bearer_headers: str, file):
+    logger.debug(f"Downloading {url}")
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=bearer_headers, timeout=300) as response:
+            assert response.status == 200
+            async for data in response.content.iter_chunked(1024):
+                await file.write(data)
+
+
+async def download_async(url: str, access_token: str, output_directory: str) -> str:
     filename = url.rsplit("/", 1)[-1].rsplit(".")[-2] + ".txt.gz"
     path = "{0}/{1}".format(output_directory, filename)
     bearer_headers = {"Content-Type": "application/json", "Accept": "application/json", "Authorization": "Bearer {0}".format(access_token)}
@@ -28,13 +38,9 @@ async def async_get(url: str, access_token: str, output_directory: str) -> str:
     if local_file_valid(url, path, bearer_headers):
         return filename[:-7]
 
-    logger.debug(f"Downloading {url}")
+    async with aiofiles.open(path, "wb") as f:
+        await async_get(url, bearer_headers, f)
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=bearer_headers) as response:
-            async for data in response.content.iter_chunked(1024):
-                async with aiofiles.open(path, "ba") as f:
-                    await f.write(data)
     return filename[:-7]
 
 
@@ -54,8 +60,8 @@ def local_file_valid(url: str, dest_file: str, headers: Dict) -> bool:
         return False
     url_date = datetime.datetime.strptime(r.headers["Last-Modified"], "%a, %d %b %Y %H:%M:%S GMT")
     file_date = datetime.datetime.utcfromtimestamp(os.path.getmtime(dest_file))
-    logger.debug(f"URL_DATE: {url_date} FILE_DATE: {file_date}")
     # Wenn url_date neuer 'größer timestamp' dann download
     if url_date > file_date:
         return False
+    logger.debug(f"skipping: {url} URL_DATE: {url_date} FILE_DATE: {file_date}")
     return True
