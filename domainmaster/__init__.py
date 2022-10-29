@@ -1,10 +1,7 @@
 from domainmaster.log_manager import logger
-from domainmaster.authentication_manager import authenticate
 from domainmaster.config import load_config
 from domainmaster.main import DomainMaster
-import datetime
 import subprocess
-import json
 import click
 
 

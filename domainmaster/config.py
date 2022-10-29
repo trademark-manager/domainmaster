@@ -28,7 +28,7 @@ def load_config() -> Dict[str, str]:
         else:
             with open("config.json", "r") as config_file:
                 config = json.load(config_file)
-    except:
+    except Exception:
         logger.exception("Error loading config.json file.\n")
 
     if config.get("debug"):

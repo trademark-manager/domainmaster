@@ -1,11 +1,9 @@
 import os
 import datetime
 import aiohttp
-import asyncio
 import aiofiles
 import requests
-from bs4 import BeautifulSoup
-from typing import List, Dict
+from typing import Dict
 from domainmaster.log_manager import logger
 
 

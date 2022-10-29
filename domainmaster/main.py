@@ -1,15 +1,11 @@
 import json
-import sys
 import os
-from cgi import parse_header
-import datetime
 import asyncio
 from typing import List, Dict
-import pandas
 
 from domainmaster.log_manager import logger
 from domainmaster.authentication_manager import authenticate
-from domainmaster.request_manager import get, async_get, download_async
+from domainmaster.request_manager import get, download_async
 
 
 class DomainMaster:

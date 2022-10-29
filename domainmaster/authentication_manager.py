@@ -1,7 +1,5 @@
 import json
 import requests
-import sys
-import datetime
 from domainmaster.log_manager import logger
 
 
