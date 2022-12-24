@@ -2,6 +2,7 @@ import json
 import os
 import asyncio
 from typing import List, Dict
+import subprocess
 
 from domainmaster.log_manager import logger
 from domainmaster.authentication_manager import authenticate
@@ -39,8 +40,23 @@ class DomainMaster:
             logger.info(f"The access_token has been expired. Re-authenticate user {self.credentials['username']}")
             self.authenticate()
             return self.get_zone_links()
-        else:
-            raise Exception("Failed to get zone links from {0} with error code {1}\n".format(links_url, status_code))
+
+        raise Exception("Failed to get zone links from {0} with error code {1}\n".format(links_url, status_code))
+
+    @staticmethod
+    def download_zones(zones: List[str], working_directory: str, parallel: bool = False):
+        for zone in zones:
+            z = f"zcat {working_directory}/zonefiles/{zone}.txt.gz | cut -f1 | uniq > {working_directory}/zonefiles/{zone}.txt"
+            out = subprocess.run(z, check=True, capture_output=True, shell=True)
+            logger.info(out)
+
+    def get_zones_from_domains(self, domains, filter_domains) -> List[str]:
+        zones = self.get_zones()
+        self.write_zone_links(zones)
+        zones_to_download = [zone for zone in zones if zone in domains] if domains else zones
+        zones_to_download = [zone for zone in zones_to_download if zone not in filter_domains] if filter_domains else zones_to_download
+
+        return self.download_zone_files(zones_to_download, parallel=True)
 
     def download_one_zone(self, url: str, output_directory: str) -> str:
         logger.debug(f"Downloading zone file from {url}")
