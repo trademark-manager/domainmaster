@@ -16,7 +16,7 @@ evils = [
 ]
 
 
-def generate_homoglyphs(url: str) -> str:
+def generate_homoglyphs(url: str) -> list:
     url = url.lower()
     homoglyphs = []
 

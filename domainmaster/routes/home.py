@@ -1,18 +1,24 @@
-from flask import jsonify, Blueprint, g, request
+from fastapi import APIRouter, Query, BackgroundTasks
+from domainmaster.domain_master import DomainMaster
+from domainmaster.dependencies import master
+
+router = APIRouter()
 
 
-bp = Blueprint("home", __name__)
-master = g.master
-
-
-@bp.route("/")
+@router.get("/")
 def home():
-    return jsonify(msg="DomainMaster Ready"), 200
+    return {"msg": "DomainMaster Ready"}
 
 
-@bp.route("/zones")
-def get_zones():
-    domains = request.args.get("domains", None)
-    filters = request.args.get("filters", None)
-    downloaded_zones = master.get_zones_from_domains(master, domains, filters)
-    master.download_zones(downloaded_zones, master.working_directory)
+def download_zones(zones: list[str]):
+    master.download_zones(zones)
+
+
+@router.get("/zones")
+def get_zones(
+    background_tasks: BackgroundTasks,
+    domains: list[str] | None = Query(default=None),
+    filters: list[str] | None = Query(default=None),
+):
+    downloaded_zones = master.get_zones_from_domains(domains, filters)
+    # background_tasks.add_task(download_zones, downloaded_zones)

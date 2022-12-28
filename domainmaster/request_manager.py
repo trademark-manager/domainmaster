@@ -7,7 +7,7 @@ from typing import Dict
 from domainmaster.log_manager import logger
 
 
-def get(url: str, access_token: str = None) -> requests.Response():
+def get(url: str, access_token: str = "") -> requests.Response:
     if access_token:
         bearer_headers = {
             "Content-Type": "application/json",
@@ -18,7 +18,7 @@ def get(url: str, access_token: str = None) -> requests.Response():
     return requests.get(url, stream=True)
 
 
-async def async_get(url: str, bearer_headers: str, file):
+async def async_get(url: str, bearer_headers: dict[str, str], file):
     logger.debug(f"Downloading {url}")
 
     async with aiohttp.ClientSession() as session:

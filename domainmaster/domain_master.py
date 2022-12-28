@@ -16,17 +16,20 @@ class DomainMaster:
         self.working_directory = working_directory
         self.access_token = authenticate(self.credentials["username"], self.credentials["password"], self.credentials["authen_base_url"])
 
+    def set_access_token(self):
+        self.access_token = authenticate(self.credentials["username"], self.credentials["password"], self.credentials["authen_base_url"])
+
     def update_authentication(self):
         try:
             self.access_token = authenticate(self.credentials["username"], self.credentials["password"], self.credentials["authen_base_url"])
         except Exception:
             logger.exception("Authentication failde")
 
-    def write_zone_links(self, zones: List):
+    def write_zone_links(self, zones: list):
         with open(f"{self.working_directory}/zones.txt", "w") as zones_file:
             json.dump(zones, zones_file, indent=4, sort_keys=True)
 
-    def get_zones(self) -> List:
+    def get_zones(self) -> list:
         links_url = f"{self.czds_base_url}/czds/downloads/links"
         links_response = get(links_url, self.access_token)
 
@@ -38,19 +41,19 @@ class DomainMaster:
             return [z.rsplit("/", 1)[-1].split(".")[0] for z in zone_links]
         elif status_code == 401:
             logger.info(f"The access_token has been expired. Re-authenticate user {self.credentials['username']}")
-            self.authenticate()
-            return self.get_zone_links()
+            self.set_access_token()
+            return self.get_zones()
 
         raise Exception("Failed to get zone links from {0} with error code {1}\n".format(links_url, status_code))
 
-    @staticmethod
-    def download_zones(zones: List[str], working_directory: str, parallel: bool = False):
+    def download_zones(self, zones: list[str], parallel: bool = False):
+        return
         for zone in zones:
-            z = f"zcat {working_directory}/zonefiles/{zone}.txt.gz | cut -f1 | uniq > {working_directory}/zonefiles/{zone}.txt"
+            z = f"zcat {self.working_directory}/zonefiles/{zone}.txt.gz | cut -f1 | uniq > {self.working_directory}/zonefiles/{zone}.txt"
             out = subprocess.run(z, check=True, capture_output=True, shell=True)
             logger.info(out)
 
-    def get_zones_from_domains(self, domains, filter_domains) -> List[str]:
+    def get_zones_from_domains(self, domains: list[str] | None = None, filter_domains: list[str] | None = None) -> list[str]:
         zones = self.get_zones()
         self.write_zone_links(zones)
         zones_to_download = [zone for zone in zones if zone in domains] if domains else zones
@@ -77,16 +80,16 @@ class DomainMaster:
 
         elif status_code == 401:
             logger.info(f"The access_token has been expired. Re-authenticate user {self.credentials['username']}")
-            authenticate()
+            self.set_access_token()
             return self.download_one_zone(url, output_directory)
         elif status_code == 404:
             logger.error("No zone file found for {0}".format(url))
-            return None
+            return ""
         else:
             logger.error("Failed to download zone from {0} with code {1}\n".format(url, status_code))
-            return None
+            return ""
 
-    async def download_zones_async(self, urls: List, output_directory: str) -> str:
+    async def download_zones_async(self, urls: List, output_directory: str) -> List:
         loop = asyncio.get_event_loop()
 
         def divide_chunks(l, n):
@@ -110,7 +113,7 @@ class DomainMaster:
             for chunk in response.iter_content(1024):
                 f.write(chunk)
 
-    def get_tlds(self) -> List:
+    def get_tlds(self) -> Dict[str, list]:
         generic_zones, country_zones = [], []
         root_zone = f"{self.working_directory}/root.zone"
         if not os.path.isfile(root_zone):
@@ -127,7 +130,7 @@ class DomainMaster:
         return {"generic": generic_zones, "country": country_zones}
 
     # Function definition for downloading all the zone files
-    def download_zone_files(self, zones_to_download: List, parallel: bool = False) -> List:
+    def download_zone_files(self, zones_to_download: list, parallel: bool = False) -> list:
         base_uri = "https://czds-api.icann.org/czds/downloads"
         # The zone files will be saved in a sub-directory
         output_directory = f"{self.working_directory}/zonefiles"

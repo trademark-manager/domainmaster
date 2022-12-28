@@ -1,38 +1,23 @@
-from jsonschema import validate
-import json
-import os
-import logging
-from domainmaster.log_manager import logger
-from typing import Dict
-
-schema = {
-    "type": "object",
-    "properties": {
-        "icann.account.username": {"type": "string"},
-        "icann.account.password": {"type": "string"},
-        "authentication.base.url": {"type": "string"},
-        "czds.base.url": {"type": "string"},
-        "debug": {"type": "boolean"},
-        "working.directory": {"type": "string"},
-        "zones.to.download": {"type": "array"},
-    },
-}
+from pydantic import BaseSettings, BaseModel, Field
 
 
-def load_config() -> Dict[str, str]:
-    try:
-        config = {}
-        if "CZDS_CONFIG" in os.environ:
-            config_data = os.environ["CZDS_CONFIG"]
-            config = json.loads(config_data)
-        else:
-            with open("config.json", "r") as config_file:
-                config = json.load(config_file)
-    except Exception:
-        logger.exception("Error loading config.json file.\n")
+class Settings(BaseModel):
+    icann_account_username: str = Field(alias="icann.account.username")
+    icann_account_password: str = Field(alias="icann.account.password")
+    authentication_base_url: str = Field(alias="authentication.base.url", default="https://account-api.icann.org")
+    czds_base_url: str = Field(alias="czds.base.url", default="https://czds-api.icann.org")
+    working_directory: str = Field(alias="working.directory", default=".")
+    debug: bool = False
+    zones_to_download: list = []
+    filters: list = []
 
-    if config.get("debug"):
-        logger.setLevel(logging.DEBUG)
-    validate(instance=config, schema=schema)
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
 
-    return config
+
+class ServerSettings(BaseSettings):
+    app_name: str = "TMM DomainMaster"
+    host: str = "0.0.0.0"
+    port: int = 5000
+    log_level: str = "info"
