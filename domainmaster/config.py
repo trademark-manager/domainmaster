@@ -7,6 +7,7 @@ class Settings(BaseModel):
     authentication_base_url: str = Field(alias="authentication.base.url", default="https://account-api.icann.org")
     czds_base_url: str = Field(alias="czds.base.url", default="https://czds-api.icann.org")
     working_directory: str = Field(alias="working.directory", default=".")
+    redis_host: str = Field(alias="redis.host", default="localhost")
     debug: bool = False
     zones_to_download: list = []
     filters: list = []

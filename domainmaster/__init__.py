@@ -1,15 +1,14 @@
-from domainmaster.log_manager import logger
 from fastapi import FastAPI
-from domainmaster.routes import home
+from domainmaster.log_manager import logger
+
+app = FastAPI()
 
 
-def main():
-    app = FastAPI()
-    from domainmaster.dependencies import master
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Starting up DomainMaster")
+    from domainmaster import router
+    from domainmaster.dependencies import setup_redis
 
-    logger.info("AC: " + master.access_token)
-    app.include_router(home.router)
-    return app
-
-
-app = main()
+    await setup_redis()
+    app.include_router(router.router)

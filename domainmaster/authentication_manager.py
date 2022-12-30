@@ -1,5 +1,6 @@
 import json
 import requests
+import logging
 from domainmaster.log_manager import logger
 
 
@@ -10,6 +11,5 @@ def authenticate(username: str, password: str, authen_base_url: str) -> str:
 
     response = requests.post(authen_url, data=json.dumps(credential), headers=authen_headers)
     response.raise_for_status()
-
-    logger.debug(f"User {username} successfully authenticated")
+    logger.info(f"User {username} successfully authenticated")
     return response.json()["accessToken"]
