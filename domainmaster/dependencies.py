@@ -5,13 +5,16 @@ from arq import create_pool
 from arq.connections import RedisSettings, ArqRedis
 from functools import lru_cache
 import json
+import os
 
 
 @lru_cache()
 def get_settings():
-    with open("config.json", mode="r") as f:
-        config_data = json.load(f)
-        return Settings(**config_data)
+    config_data = {}
+    if os.path.isfile("config.json"):
+        with open("config.json", mode="r") as f:
+            config_data = json.load(f)
+    return Settings(**config_data)
 
 
 def get_domain_master(config: Settings) -> DomainMaster:

@@ -3,11 +3,14 @@ version: "3"
 services:
   master:
     image: ghcr.io/b3n4kh/domainmaster
-    container_name: master
+    env_file:
+      - .env
     ports:
       - 5000:5000
   worker:
     image: ghcr.io/b3n4kh/domainmaster
     command: arq domainmaster.arq.WorkerSettings
+    env_file:
+      - .env
     links:
       - master

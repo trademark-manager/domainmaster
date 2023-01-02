@@ -1,20 +1,25 @@
-from pydantic import BaseSettings, BaseModel, Field
+from pydantic import BaseSettings, Field, EmailStr, HttpUrl
 
 
-class Settings(BaseModel):
-    icann_account_username: str = Field(alias="icann.account.username")
-    icann_account_password: str = Field(alias="icann.account.password")
-    authentication_base_url: str = Field(alias="authentication.base.url", default="https://account-api.icann.org")
-    czds_base_url: str = Field(alias="czds.base.url", default="https://czds-api.icann.org")
-    working_directory: str = Field(alias="working.directory", default=".")
-    redis_host: str = Field(alias="redis.host", default="localhost")
+class Settings(BaseSettings):
+    icann_account_username: EmailStr
+    icann_account_password: str
+    authentication_base_url: HttpUrl = Field(default="https://account-api.icann.org")
+    czds_base_url: HttpUrl = Field(default="https://czds-api.icann.org")
+    working_directory: str = "."
+    redis_host: str = "localhost"
     debug: bool = False
     zones_to_download: list = []
     filters: list = []
 
     class Config:
+        allow_population_by_field_name = True
         env_file = ".env"
         env_file_encoding = "utf-8"
+
+        @classmethod
+        def alias_generator(cls, string: str) -> str:
+            return ".".join(string.split("_"))
 
 
 class ServerSettings(BaseSettings):
