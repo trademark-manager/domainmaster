@@ -28,3 +28,19 @@ async def get_zones(
     filters: list[str] | None = Query(default=None),
 ):
     return await master.get_zones_from_domains(domains, filters)
+
+
+@router.get("/queue")
+async def get_queue():
+    return await master.get_queue()
+
+
+@router.get("/keys")
+async def get_keys():
+    return await master.get_keys()
+
+
+@router.delete("/queue")
+async def reset_queue():
+    jobs = await master.reset_queue()
+    return {"msg": f"Deleted {jobs} jobs from queue"}

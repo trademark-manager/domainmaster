@@ -5,6 +5,7 @@ from typing import Dict
 import subprocess
 import requests
 from arq.connections import ArqRedis
+from arq.jobs import JobResult
 
 from domainmaster.log_manager import logger
 from domainmaster.authentication_manager import authenticate
@@ -32,6 +33,21 @@ class DomainMaster:
             os.mkdir(self.working_directory)
         if not os.path.exists(self.zones_directory):
             os.mkdir(self.zones_directory)
+
+    async def get_queue(self) -> list[JobResult] | None:
+        return None if self.redis is None else await self.redis.all_job_results()
+
+    async def get_keys(self) -> list[bytes] | None:
+        return None if self.redis is None else await self.redis.keys("arq:result:*")
+
+    async def reset_queue(self) -> int:
+        if self.redis is None:
+            return 0
+        jobs = []
+        for key in await self.redis.keys("arq:result:*"):
+            jobs.append(key)
+            await self.redis.delete(key)
+        return len(jobs)
 
     def update_authentication(self):
         try:
