@@ -9,6 +9,7 @@ async def download_async(ctx, url):
 
 
 async def startup(ctx):
+    master.setup(None)
     ctx["master"] = master
 
 
