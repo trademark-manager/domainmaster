@@ -85,11 +85,13 @@ class DomainMaster:
 
         return await self.download_zones_async(urls)
 
-    async def queue_zones_download(self, urls: list) -> list:
+    async def queue_zones_download(self, urls: list) -> list[str]:
         jobs = []
         if self.redis is not None:
             for url in urls:
-                jobs.append(await self.request_manager.queue_zones_download(url, self.redis))
+                job = await self.request_manager.queue_zones_download(url, self.redis)
+                if job:
+                    jobs.append(job.job_id)
         return jobs
 
     async def download_zones_async(self, urls: list) -> list:

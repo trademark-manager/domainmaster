@@ -27,8 +27,4 @@ async def get_zones(
     domains: list[str] | None = Query(default=None),
     filters: list[str] | None = Query(default=None),
 ):
-    logger.debug("Downloading Zones")
-    logger.debug(f"Domains: {domains}")
-    logger.debug(f"Filters: {filters}")
-    return await master.filter_zones(domains, filters)
-    # downloaded_zones = master.get_zones_from_domains(domains, filters)
+    return await master.get_zones_from_domains(domains, filters)

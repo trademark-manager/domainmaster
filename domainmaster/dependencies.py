@@ -5,7 +5,6 @@ from arq import create_pool
 from arq.connections import RedisSettings, ArqRedis
 from functools import lru_cache
 import json
-import asyncio
 
 
 @lru_cache()

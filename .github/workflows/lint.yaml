@@ -3,7 +3,7 @@ name: lint
 on:
   push:
     paths:
-    - 'learners/**'
+    - 'domainmaster/**'
     branches:
     - master
   pull_request:
@@ -23,8 +23,8 @@ jobs:
           python -m pip install .
       - name: Lint with flake8
         run: |
-          flake8 learners --count --exit-zero --max-complexity=10 --max-line-length=142 --statistics
+          flake8 domainmaster --count --exit-zero --max-complexity=10 --max-line-length=142 --statistics
       - name: lint with black
         uses: rickstaa/action-black@v1
         with:
-          black_args: "learners --check"
+          black_args: "domainmaster --check"

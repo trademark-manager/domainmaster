@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  master:
+    image: ghcr.io/b3n4kh/domainmaster
+    container_name: master
+    ports:
+      - 5000:5000
+  worker:
+    image: ghcr.io/b3n4kh/domainmaster
+    command: arq domainmaster.arq.WorkerSettings
+    links:
+      - master

@@ -42,7 +42,7 @@ class RequestManager:
         return filename
 
     async def queue_zones_download(self, url: str, queue: ArqRedis) -> Job | None:
-        return await queue.enqueue_job("download_async", url)
+        return await queue.enqueue_job("download_async", url, _job_id=f"download:{url}")
 
     def local_file_valid(self, url: str, dest_file: str) -> bool:
         """
