@@ -1,0 +1,8 @@
+version: "3"
+
+services:
+  worker:
+    image: ghcr.io/b3n4kh/domainmaster
+    command: arq domainmaster.arq.WorkerSettings
+    env_file:
+      - .env

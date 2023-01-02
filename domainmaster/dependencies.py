@@ -3,6 +3,7 @@ from domainmaster.domain_master import DomainMaster
 from domainmaster.log_manager import logger
 from arq import create_pool
 from arq.connections import RedisSettings, ArqRedis
+from redis.exceptions import ConnectionError
 from functools import lru_cache
 import json
 import os
@@ -32,8 +33,11 @@ def get_domain_master(config: Settings) -> DomainMaster:
 
 async def get_queue_pool(config: Settings) -> ArqRedis | None:
     if config.redis_host:
-        logger.info("Creating Redis pool")
-        return await create_pool(RedisSettings())
+        try:
+            logger.info("Creating Redis pool")
+            return await create_pool(RedisSettings(host=config.redis_host))
+        except ConnectionError:
+            logger.error("Redis connection error")
     return None
 
 
