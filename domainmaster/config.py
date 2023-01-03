@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     working_directory: str = "."
     redis_host: str = "localhost"
     debug: bool = False
+    api_key: str = "foobar"
     zones_to_download: list = []
     filters: list = []
 

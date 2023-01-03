@@ -1,8 +1,11 @@
 from fastapi import APIRouter, Query
+from fastapi.security import HTTPBearer
 from domainmaster.dependencies import master
 from domainmaster.log_manager import logger
 
+
 router = APIRouter()
+security = HTTPBearer()
 
 
 @router.get("/")
